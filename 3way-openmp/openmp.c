@@ -10,25 +10,10 @@ char char_array[ARRAY_SIZE][STRING_SIZE];
 int char_sums[ARRAY_SIZE];
 int line_lengths[ARRAY_SIZE];
 
-//float find_avg(char* line, int nchars) {
-//    int i;
-//    float sum = 0;
-//
-//    for (i = 0; i < nchars; i++) {
-//        sum += ((int)line[i]);
-//    }
-//
-//    if (nchars > 0)
-//        return sum / (float)nchars;
-//    else
-//        return 0.0;
-//}
-
 void init_arrays()
 {
     int maxlines = 1000000;
     int i, j, err;
-    float  charsum = 0.0;
     int nchars = 0;
     FILE* fd;
     char* line = (char*)malloc(2001); // no lines larger than 2000 chars
@@ -46,7 +31,6 @@ void init_arrays()
         }
         line_lengths[i] = nchars;
         char_sums[i] = 0;
-        //printf("%d: %.1f\n", nlines, find_avg(line, nchars));
     }
 
     fclose(fd);
@@ -56,31 +40,14 @@ void count_array()
 {
     char theChar;
     int i, j;
-    int local_char_sums[ARRAY_SIZE];
 
-    #pragma omp parallel private(theChar,local_char_sums)
+    #pragma omp parallel private(theChar)
     {
-
-        //printf("thread no %d\n", omp_get_thread_num());
-
-        // init local count array
-        for (i = 0; i < ARRAY_SIZE; i++) {
-            local_char_count[i] = 0;
-        }
-
-
         #pragma omp for collapse(2)
         for (i = 0; i < ARRAY_SIZE; i++) {
             for (j = 0; j < STRING_SIZE; j++) {
                 theChar = char_array[i][j];
-                local_char_sums[i] += ((int)theChar);
-            }
-        }
-
-        #pragma omp critical
-        {
-            for (i = 0; i < ARRAY_SIZE; i++) {
-                char_sums[i] += local_char_sums[i];
+                char_sums[i] += ((int)theChar);
             }
         }
     } //omp parallel
@@ -88,10 +55,15 @@ void count_array()
 
 void print_results()
 {
-    int i, total = 0;
+    int i;
+    float total = 0;
 
-    for (i = 0; i < ARRAY_SIZE; i++) {        
-        printf("%d: %.1f\n", i, (char_sums[i])/((float)line_lengths[i]));
+    for (i = 0; i < ARRAY_SIZE; i++) {   
+        if (line_lengths[i] > 0)
+            total = (char_sums[i]) / ((float)line_lengths[i]);
+        else
+            total = 0;
+        printf("%d: %.1f\n", i, total);
     }
 }
 
