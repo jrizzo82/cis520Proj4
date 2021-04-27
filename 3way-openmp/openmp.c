@@ -12,24 +12,16 @@ int line_lengths[ARRAY_SIZE];
 
 void init_arrays()
 {
-    int i, j, err;
-    int nchars = 0;
+    int i, err;
     FILE* fd;
-    char* line = (char*)malloc(2001); // no lines larger than 2000 chars
 
- // Read in the lines from the data file
+    // Read in the lines from the data file
 
     fd = fopen("/homes/dan/625/wiki_dump.txt", "r");
     for (i = 0; i < ARRAY_SIZE; i++) {
-        err = fscanf(fd, "%[^\n]\n", line);
+        err = fscanf(fd, "%[^\n]\n", char_array[i]);
         if (err == EOF) break;
-        nchars = strlen(line);
-        char_array[i] = line;
-        /*for (j = 0; j < nchars; j++)
-        {
-            char_array[i][j] = line[j];
-        }*/
-        line_lengths[i] = nchars;
+        line_lengths[i] = strlen(char_array[i]);
         char_sums[i] = 0;
     }
 
@@ -38,16 +30,14 @@ void init_arrays()
 
 void count_array()
 {
-    char theChar;
     int i, j;
 
-    #pragma omp parallel private(theChar)
+    #pragma omp parallel private(i,j) num_threads(4)
     {
         #pragma omp for collapse(2)
         for (i = 0; i < ARRAY_SIZE; i++) {
             for (j = 0; j < STRING_SIZE; j++) {
-                theChar = char_array[i][j];
-                char_sums[i] += ((int)theChar);
+                char_sums[i] += ((int)char_array[i][j]);
             }
         }
     } //omp parallel
@@ -69,8 +59,11 @@ void print_results()
 
 int main()
 {
+    // Fill arrays with lines from file, line lengths, or zeros
     init_arrays();
+    // Count values of the characters
     count_array();
+    // Print out the results
     print_results();
 }
 
