@@ -4,7 +4,7 @@
 #include <omp.h>
 
 #define ARRAY_SIZE 1000000
-#define STRING_SIZE 2000
+#define STRING_SIZE 2001
 
 char char_array[ARRAY_SIZE][STRING_SIZE];
 int char_sums[ARRAY_SIZE];
@@ -12,7 +12,6 @@ int line_lengths[ARRAY_SIZE];
 
 void init_arrays()
 {
-    int maxlines = 1000000;
     int i, j, err;
     int nchars = 0;
     FILE* fd;
@@ -21,14 +20,15 @@ void init_arrays()
  // Read in the lines from the data file
 
     fd = fopen("/homes/dan/625/wiki_dump.txt", "r");
-    for (i = 0; i < maxlines; i++) {
+    for (i = 0; i < ARRAY_SIZE; i++) {
         err = fscanf(fd, "%[^\n]\n", line);
         if (err == EOF) break;
         nchars = strlen(line);
-        for (j = 0; j < nchars; j++)
+        char_array[i] = line;
+        /*for (j = 0; j < nchars; j++)
         {
             char_array[i][j] = line[j];
-        }
+        }*/
         line_lengths[i] = nchars;
         char_sums[i] = 0;
     }
