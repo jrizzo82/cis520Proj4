@@ -64,6 +64,7 @@ int main()
     // Count values of the characters
     count_array();
     // Print out the results
-    print_results();
+   // print_results();
+    printf("Done test2");
 }
 
