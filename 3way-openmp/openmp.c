@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <omp.h>
+#include <sys/time.h>
 
 #define ARRAY_SIZE 1000000
 #define STRING_SIZE 2001
@@ -59,12 +60,25 @@ void print_results()
 
 int main()
 {
+    int i, j = 0;
+    struct timeval t1, t2;
+    double elapsedTime;
+    int numSlots, myVersion = 1;
+
+    gettimeofday(&t1, NULL);
+
+    printf("DEBUG: starting loop on %s\n", getenv("HOSTNAME"));
+
     // Fill arrays with lines from file, line lengths, or zeros
     init_arrays();
     // Count values of the characters
     count_array();
     // Print out the results
    // print_results();
-    printf("Done test2");
+    gettimeofday(&t2, NULL);
+
+    elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; //sec to ms
+    elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
+    printf("DATA, %d, %s, %f\n", myVersion, getenv("SLURM_NTASKS"), elapsedTime);
 }
 
