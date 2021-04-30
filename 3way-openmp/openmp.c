@@ -111,15 +111,13 @@ int main()
     // Count values of the characters
     count_array();
     // Print out the results
-   // print_results();
+    print_results();
     gettimeofday(&t2, NULL);
 
+    GetProcessMemory(&myMem);
     elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; //sec to ms
     elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
-    printf("DATA, %d, %s, %f\n", myVersion, getenv("SLURM_NTASKS"), elapsedTime);    
+    printf("DATA, %d, %s, %f, %u, %u\n", myVersion, getenv("SLURM_NTASKS"), elapsedTime, myMem.virtualMem, myMem.physicalMem);    
 
-    GetProcessMemory(&myMem);
-
-    printf("Memory: vMem %u KB, pMem %u KB\n", myMem.virtualMem, myMem.physicalMem);
 }
 
