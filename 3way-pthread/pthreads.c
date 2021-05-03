@@ -3,17 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NUM_THREADS 12
+#define NUM_THREADS 4
 
-#define ARRAY_SIZE 8000000
+#define ARRAY_SIZE 20
 #define LINE_SIZE 2000	
 
 char input_array[ARRAY_SIZE][LINE_SIZE];
-int char_sums[ARRAY_SIZE];
-int line_lengths[ARRAY_SIZE];
-int line_avgs[ARRAY_SIZE];
-
-pthread_mutex_t mutexsum;
+float line_avgs[ARRAY_SIZE];
+int actual_lines;
 
 void init_arrays()
 {
@@ -21,46 +18,15 @@ void init_arrays()
     FILE* fd;
 
     // Read in the lines from the data file
-
-    fd = fopen("/homes/dan/625/wiki_dump.txt", "r");
-    for (i = 0; i < ARRAY_SIZE; i++) {
+    actual_lines = 0;
+    fd = fopen("test.txt", "r");
+    for (i = 0; i < 4; i++) {
         err = fscanf(fd, "%[^\n]\n", input_array[i]);
+        actual_lines += 1;
         if (err == EOF) break;
-        char_sums[i] = 0;
     }
-
     fclose(fd);
 }
-
-void count_array(void *myID)
-{
-    int i, j;
-	int line, charIndex;
-	int startPos = ((int) myID) * (ARRAY_SIZE/ NUM_THREADS);
-	int endPos = startPos + (ARRAY_SIZE / NUM_THREADS);
-
-    for (i = startPos; i < endPos; i++) {
-		line_lengths[i] = strlen(input_array[i]);
-        for (j = 0; j < LINE_SIZE; j++) {
-            char_sums[i] += ((int)input_array[i][j]);
-        }
-		if (line_lengths[i] > 0)
-            line_avgs[i] = (char_sums[i]) / ((float)line_lengths[i]);
-        else
-            line_avgs[i] = 0; 
-    }
-	
-	pthread_exit(NULL);
-}
-
-void print_results()
-{
-    int i;
-    for (i = 0; i < ARRAY_SIZE; i++) {   
-        printf("%d: %.1f\n", i, line_avgs[i]);
-    }
-}
-
 
 float find_avg(char* line, int nchars) {
    int i, j;
@@ -75,7 +41,37 @@ float find_avg(char* line, int nchars) {
    else
 	return 0.0;
 }
-	
+
+void print_results()
+{
+    int i;
+
+    for (i = 0; i < actual_lines; i++) {   
+        line_avgs[i];
+        printf("%d: %.1f\n", i, line_avgs[i]);
+    }
+}
+
+void *count_array(void *myID)
+{
+    int i, j;
+	int line, charIndex;
+	int startPos = ((int) myID) * (actual_lines/ NUM_THREADS);
+	int endPos = startPos + (actual_lines / NUM_THREADS);
+    int line_length = 0;
+
+    for (i = startPos; i < endPos; i++) {
+        line_length = strlen(input_array[i]);
+		if (line_length > 0){
+            
+            line_avgs[i] = find_avg(input_array[i], line_length);
+        }
+        else
+            line_avgs[i] = 0; 
+    }
+	pthread_exit(NULL);
+}
+
 main() {
 	int i, rc;
 	struct timeval t1, t2;
@@ -108,10 +104,9 @@ main() {
 			exit(-1);
 		}
 	}
-	
-	print_results();
-	
-	pthread_mutex_destroy(&mutexsum);
+    print_results();
+
+	gettimeofday(&t2, NULL);
 	elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; //sec to ms
     elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
 	printf("DATA, %s, %f\n", getenv("SLURM_NTASKS"), elapsedTime);
