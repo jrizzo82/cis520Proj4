@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NUM_THREADS 4
 
 #define ARRAY_SIZE 20
 #define LINE_SIZE 2000	
@@ -11,6 +10,8 @@
 char input_array[ARRAY_SIZE][LINE_SIZE];
 float line_avgs[ARRAY_SIZE];
 int actual_lines;
+
+int NUM_THREADS = 1;
 
 void init_arrays()
 {
@@ -54,32 +55,37 @@ void print_results()
 
 void *count_array(void *myID)
 {
-    int i, j;
+	int i, j;
 	int line, charIndex;
-	int startPos = ((int) myID) * (actual_lines/ NUM_THREADS);
-	int endPos = startPos + (actual_lines / NUM_THREADS);
-    int line_length = 0;
+    	int chunkSize = (actual_lines + NUM_THREADS - 1)/ NUM_THREADS;
+	int startPos = ((int) myID) * chunkSize;
+	int endPos;
+    	if((startPos + chunkSize) > actual_lines){
+     	   endPos = actual_lines;
+    	}
+    	else endPos = startPos + chunkSize;
+    	int line_length = 0;
 
-    for (i = startPos; i < endPos; i++) {
-        line_length = strlen(input_array[i]);
+    	for (i = startPos; i < endPos; i++) {
+    		line_length = strlen(input_array[i]);
 		if (line_length > 0){
-            
-            line_avgs[i] = find_avg(input_array[i], line_length);
-        }
-        else
-            line_avgs[i] = 0; 
-    }
+            		line_avgs[i] = find_avg(input_array[i], line_length);
+        	}
+        	else
+            		line_avgs[i] = 0; 
+    	}
 	pthread_exit(NULL);
 }
 
-main() {
+main(int argc, char *argv[]) {
 	int i, rc;
 	struct timeval t1, t2;
-    double elapsedTime;
+	double elapsedTime;
 	pthread_t threads[NUM_THREADS];
 	pthread_attr_t attr;
 	void *status;
-	
+    	int threadsWanted = atoi(argv[1]);
+
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 	
@@ -88,7 +94,14 @@ main() {
 	printf("Debug: starting on %s\n", getenv("HOSTNAME"));
 	
 	init_arrays();
-	
+
+   	if(threadsWanted >= 1 && threadsWanted <= 16){
+    		NUM_THREADS = threadsWanted;
+   	}
+    	else {
+        	printf("Invalid amount of threads. Please use a value between 1 and 16.");
+        	exit(EXIT_FAILURE);
+    	}
 	for(i = 0; i < NUM_THREADS; i++){
 		rc = pthread_create(&threads[i], &attr, count_array, (void *)i);
 		if(rc){
@@ -104,11 +117,11 @@ main() {
 			exit(-1);
 		}
 	}
-    print_results();
+    	print_results();
 
 	gettimeofday(&t2, NULL);
 	elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0; //sec to ms
-    elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
+    	elapsedTime += (t2.tv_usec - t1.tv_usec) / 1000.0; // us to ms
 	printf("DATA, %s, %f\n", getenv("SLURM_NTASKS"), elapsedTime);
 	pthread_exit(NULL);
 }
