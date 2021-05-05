@@ -20,7 +20,7 @@ void init_arrays()
 
     // Read in the lines from the data file
     actual_lines = 0;
-    fd = fopen("test.txt", "r");
+    fd = fopen("/homes/dan/625/wiki_dump.txt", "r");
     for (i = 0; i < 4; i++) {
         err = fscanf(fd, "%[^\n]\n", input_array[i]);
         actual_lines += 1;
