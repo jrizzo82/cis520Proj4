@@ -81,6 +81,10 @@ main(int argc, char *argv[]) {
 	int i, rc;
 	struct timeval t1, t2;
 	double elapsedTime;
+	
+	if (argc > 0) {
+		NUM_THREADS = atoi(argv[1]);
+	}
 	pthread_t threads[NUM_THREADS];
 	pthread_attr_t attr;
 	void *status;
