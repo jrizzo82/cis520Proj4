@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 {
 	MPI_File in;
 	int numtasks, taskid, len;
-	const int overlap = 100;
+	const int overlap = 100000;
 	char hostname[MPI_MAX_PROCESSOR_NAME];
 
 	MPI_Init(&argc, &argv);
